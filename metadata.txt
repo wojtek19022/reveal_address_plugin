@@ -8,3 +8,4 @@ email=office@envirosolutions.pl
 homepage=https://github.com/envirosolutionspl/reveal_address_plugin
 tracker=https://github.com/envirosolutionspl/reveal_address_plugin/issues
 repository=https://github.com/envirosolutionspl/reveal_address_plugin
+tags=qgis,reverse geocoding, address, nominatim, chatgpt, envirosolutions, api
