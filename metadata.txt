@@ -1,0 +1,10 @@
+[general]
+name=Reveal Address
+qgisMinimumVersion=3.0
+description=QGIS plugin to reveal address using reverse geocoding on Nominatim API
+version=1.0
+author=ChatGPT
+email=
+homepage=
+tracker=
+repository=
