@@ -1,16 +1,10 @@
-# Import necessary modules from QGIS
-from qgis.core import QgsPointXY
+from qgis.core import QgsNetworkAccessManager, QgsPointXY
 from qgis.gui import QgsMapToolEmitPoint, QgsMapTool, QgsMapCanvas
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem
-
-# Import QMessageBox to show the address in a message box
-from qgis.PyQt.QtWidgets import QMessageBox
-
-# Import the requests module to make a GET request to the Nominatim API
-import requests
-
-# Import the QAction class to create the action to activate the map tool
-from qgis.PyQt.QtWidgets import QAction
+from qgis.PyQt.QtWidgets import QMessageBox, QAction
+from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
+from qgis.PyQt.QtCore import QUrl
+import json
 
 class RevealAddressMapTool(QgsMapToolEmitPoint):
     def __init__(self, canvas):
@@ -20,6 +14,9 @@ class RevealAddressMapTool(QgsMapToolEmitPoint):
         # Create a coordinate transform object to transform the coordinates from the canvas CRS to WGS 84
         self.coord_transform = QgsCoordinateTransform(canvas.mapSettings().destinationCrs(), QgsCoordinateReferenceSystem(4326), canvas.mapSettings().transformContext())
 
+        # Create a QgsNetworkAccessManager object
+        self.nam = QgsNetworkAccessManager.instance()
+
     def canvasReleaseEvent(self, event):
         # Get the click coordinates
         click_coords = self.toMapCoordinates(event.pos())
@@ -27,19 +24,25 @@ class RevealAddressMapTool(QgsMapToolEmitPoint):
         # Transform the coordinates from the canvas CRS to WGS 84
         click_coords_4326 = self.coord_transform.transform(click_coords)
 
-        # Use requests to make a GET request to the Nominatim API with the lat and lon of the click
-        result = requests.get("https://nominatim.openstreetmap.org/reverse", params={
-            "format": "json",
-            "lat": click_coords_4326.y(),
-            "lon": click_coords_4326.x()
-        })
+        # Create a GET request to the Nominatim API with the lat and lon of the click
+        url = "https://nominatim.openstreetmap.org/reverse?format=json&lat={}&lon={}".format(click_coords_4326.y(), click_coords_4326.x())
+        req = QNetworkRequest(QUrl(url))
 
-        # Get the address from the result
-        address_json = result.json()
+        # Send the GET request and connect the finished signal to the self.handleResult() method
+        reply = self.nam.get(req)
+        reply.finished.connect(self.handleResult)
+
+    def handleResult(self):
+        reply = self.sender()
+        if reply.error() != QNetworkReply.NoError:
+            print("Request error: ", reply.error())
+            return
+        address_json = json.loads(str(reply.readAll(), 'utf-8'))
         if "display_name" in address_json:
             address = address_json["display_name"]
         else:
             address = "No address found"
+
 
         # Show the address in a message box
         QMessageBox.information(None, "Address", address)
