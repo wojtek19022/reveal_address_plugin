@@ -1,21 +1,23 @@
 # Import necessary modules from QGIS
 from qgis.core import QgsPointXY
-from qgis.gui import QgsMapToolEmitPoint, QgsMapTool,  QgsMapCanvas
+from qgis.gui import QgsMapToolEmitPoint, QgsMapTool, QgsMapCanvas
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem
-# Import QMessageBox
-from PyQt5.QtWidgets import QMessageBox
-# Import the Nominatim module for reverse geocoding
+
+# Import QMessageBox to show the address in a message box
+from qgis.PyQt.QtWidgets import QMessageBox
+
+# Import the requests module to make a GET request to the Nominatim API
 import requests
 
-# Import the QAction class from the QtWidgets module
-from PyQt5.QtWidgets import QAction
+# Import the QAction class to create the action to activate the map tool
+from qgis.PyQt.QtWidgets import QAction
 
 class RevealAddressMapTool(QgsMapToolEmitPoint):
     def __init__(self, canvas):
         self.canvas = canvas
         QgsMapToolEmitPoint.__init__(self, self.canvas)
 
-        # Create a coordinate transform object
+        # Create a coordinate transform object to transform the coordinates from the canvas CRS to WGS 84
         self.coord_transform = QgsCoordinateTransform(canvas.mapSettings().destinationCrs(), QgsCoordinateReferenceSystem(4326), canvas.mapSettings().transformContext())
 
     def canvasReleaseEvent(self, event):
@@ -25,7 +27,7 @@ class RevealAddressMapTool(QgsMapToolEmitPoint):
         # Transform the coordinates from the canvas CRS to WGS 84
         click_coords_4326 = self.coord_transform.transform(click_coords)
 
-        # Use requests to make a GET request to the Nominatim API
+        # Use requests to make a GET request to the Nominatim API with the lat and lon of the click
         result = requests.get("https://nominatim.openstreetmap.org/reverse", params={
             "format": "json",
             "lat": click_coords_4326.y(),
