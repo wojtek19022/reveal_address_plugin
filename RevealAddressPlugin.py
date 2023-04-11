@@ -51,6 +51,8 @@ class RevealAddressMapTool(QgsMapToolEmitPoint):
 
 class RevealAddressPlugin:
     def __init__(self, iface):
+        self.map_tool = None
+        self.action = None
         self.iface = iface
 
     def initGui(self):
@@ -68,5 +70,6 @@ class RevealAddressPlugin:
 
     def unload(self):
         # Remove the map tool and action when the plugin is unloaded
-        self.iface.mapCanvas().unsetMapTool(self.map_tool)
+        if self.map_tool:
+            self.iface.mapCanvas().unsetMapTool(self.map_tool)
         self.iface.removeToolBarIcon(self.action)
