@@ -3,10 +3,14 @@ from qgis.gui import QgsMapToolEmitPoint, QgsMapTool, QgsMapCanvas
 from qgis.core import QgsCoordinateTransform, QgsCoordinateReferenceSystem
 from qgis.PyQt.QtWidgets import QMessageBox, QAction, QToolBar
 from qgis.PyQt.QtNetwork import QNetworkRequest, QNetworkReply
-from qgis.PyQt.QtCore import QUrl
+from qgis.PyQt.QtCore import QUrl, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 import json
 import os
+
+"""Wersja wtyczki"""
+plugin_name = "Reveal address"
+plugin_version = "1.2.1"
 
 class RevealAddressMapTool(QgsMapToolEmitPoint):
     def __init__(self, canvas):
@@ -71,6 +75,11 @@ class RevealAddressPlugin:
         if not self.toolbar:
             self.toolbar = self.iface.addToolBar(u'EnviroSolutions')
             self.toolbar.setObjectName(u'EnviroSolutions')
+            
+        self.shortcut = None
+        # Check if plugin was started the first time in current QGIS session
+        # Must be set in initGui() to survive plugin reloads
+        self.first_start = None
 
     def add_action(
                 self,
@@ -107,21 +116,36 @@ class RevealAddressPlugin:
 
             return action
 
+    # noinspection PyMethodMayBeStatic
+    def tr(self, message):
+        """Get the translation for a string using Qt translation API.
+
+        We implement this ourselves since we do not inherit QObject.
+
+        :param message: String for translation.
+        :type message: str, QString
+
+        :returns: Translated version of message.
+        :rtype: QString
+        """
+        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
+        return QCoreApplication.translate('RevealAddressPlugin', message)
+    
+    
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/reveal_address_plugin/icons/icon.svg'
         self.add_action(
             icon_path,
-            text=u'Reveal Address',
+            text=self.tr(u'Reveal Address'),
             callback=self.activate,
-            parent=self.iface.mainWindow())
+            parent=self.iface.mainWindow()
+        )
         
-    # def run(self):
-    #     # Create action to activate the map tool
-    #     self.action = QAction("Reveal Address", self.iface.mainWindow())
-    #     self.action.triggered.connect(self.activate)
-        
+        # will be set False in run()
+        self.first_start = True
+
 
     def activate(self):
         # Create and set the map tool
