@@ -58,7 +58,6 @@ class RevealAddressMapTool(QgsMapToolEmitPoint):
         return True
 
 
-
 class RevealAddressPlugin:
     def __init__(self, iface):
         self.map_tool = None
@@ -67,6 +66,7 @@ class RevealAddressPlugin:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
+        self.icon_path = f'{self.plugin_dir}\icons\icon.svg'
 
         self.actions = []
         self.menu = u'&EnviroSolutions'
@@ -131,23 +131,20 @@ class RevealAddressPlugin:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('RevealAddressPlugin', message)
     
-    
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/reveal_address_plugin/icons/icon.svg'
         self.add_action(
-            icon_path,
+            self.icon_path,
             text=self.tr(u'Reveal Address'),
-            callback=self.activate,
+            callback=self.run,
             parent=self.iface.mainWindow()
         )
         
         # will be set False in run()
         self.first_start = True
 
-
-    def activate(self):
+    def run(self):
         # Create and set the map tool
         self.map_tool = RevealAddressMapTool(self.iface.mapCanvas())
         self.iface.mapCanvas().setMapTool(self.map_tool)
@@ -155,16 +152,15 @@ class RevealAddressPlugin:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-                self.iface.removePluginMenu(
-                    u'&EnviroSolutions',
-                    action)
-                # self.iface.removeToolBarIcon(action)
-                self.toolbar.removeAction(action)
+            self.iface.removePluginMenu(
+                u'&EnviroSolutions',
+                action)
+            # self.iface.removeToolBarIcon(action)
+            self.toolbar.removeAction(action)
                 
         # Remove the map tool and action when the plugin is unloaded
         if self.map_tool:
             self.iface.mapCanvas().unsetMapTool(self.map_tool)
-        self.iface.removeToolBarIcon(self.action)
 
         # remove the toolbar
         del self.toolbar
